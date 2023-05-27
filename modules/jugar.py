@@ -110,12 +110,21 @@ def ventana_jugar():
         def place():
             if curr_num() == 0:
                 MessageBox.showerror("Selecciona un número", "Para ingresar un número al Kakuro, se debe haber seleccionado uno previamente")
-            elif validar_numero(curr_num(), i, j) == True:
+            elif curr_num() != 10 and validar_numero(curr_num(), i, j) == True:
                 undo_pila.append((i, j, matriz[i-1][j-1]["text"]))
                 matriz[i-1][j-1].configure(text=f"{curr_num()}")
                 current_number.append(0)
                 for e_button in numeros_botones:
                     e_button.configure(bg="#1C1C1C", fg="white")
+                boton_borrar_casilla.configure(bg="#FFD700", fg="white")      
+            elif curr_num() == 10:
+                undo_pila.append((i, j, matriz[i-1][j-1]["text"]))
+                matriz[i-1][j-1].configure(text="")
+                current_number.append(0)
+                for e_button in numeros_botones:
+                    e_button.configure(bg="#1C1C1C", fg="white")
+                boton_borrar_casilla.configure(bg="#FFD700", fg="white")
+                
         return place
     # Creación del tablero de juego
     matriz = []
@@ -154,11 +163,21 @@ def ventana_jugar():
         print(redo_pila[-1][2])
         matriz[redo_pila[-1][0]-1][redo_pila[-1][1]-1].configure(text=redo_pila[-1][2])
         redo_pila.pop()
-        
+    # Función borrar casilla
+    def borrar_casilla():
+        for e_button in numeros_botones:
+            e_button.configure(bg="#1C1C1C", fg="white")
+        if current_number[-1] == 10:
+            current_number.append(0)
+            boton_borrar_casilla.configure(bg="#FFD700", fg="white")
+        else:
+            current_number.append(10)
+            boton_borrar_casilla.configure(bg="white", fg="#1C1C1C")
+
     # Primera fila de botones
     boton_iniciar = Button(jugar_ventana, height = 2, width=14, text="Iniciar \n Juego", font=("Arial", 10), bg="#FF0066")
     boton_undo = Button(jugar_ventana, height = 2, width=14, text="Deshacer \n Jugada", command=undo, font=("Arial", 10), bg="#0FD1DB")
-    boton_borrar_casilla = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Casilla", font=("Arial", 10), bg="#FFD700")
+    boton_borrar_casilla = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Casilla", command=borrar_casilla, font=("Arial", 10), bg="#FFD700")
     boton_top10 = Button(jugar_ventana, height = 2, width=14, text="Top 10", font=("Arial", 10), bg="#00B050")
     
     boton_iniciar.place(x= 40, y= 580, anchor=NW)

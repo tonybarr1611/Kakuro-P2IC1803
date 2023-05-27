@@ -25,6 +25,9 @@ def ventana_jugar():
     player_name.place(relx = 0.3, y= 10, relwidth=0.4,  anchor=NW)
     # Se inicia la lista de current number, esta se usa para definir cual número se encuentra seleccionado actualmente
     current_number = [0]
+    # Se inician las pilas
+    undo_pila = []
+    redo_pila = []
     # Función que se encarga de seleccionar un número en los botones y lo envia a la lista de current_number
     def select_number(button):
         def select():
@@ -108,6 +111,7 @@ def ventana_jugar():
             if curr_num() == 0:
                 MessageBox.showerror("Selecciona un número", "Para ingresar un número al Kakuro, se debe haber seleccionado uno previamente")
             elif validar_numero(curr_num(), i, j) == True:
+                undo_pila.append((i, j, matriz[i-1][j-1]["text"]))
                 matriz[i-1][j-1].configure(text=f"{curr_num()}")
                 current_number.append(0)
                 for e_button in numeros_botones:
@@ -132,9 +136,28 @@ def ventana_jugar():
         numeros_botones = numeros_botones + [boton]
         numeros_botones[-1].config(command=select_number(n))
         boton.place(x= 650, y= 60 + n*50, anchor=NW)
+    # Función undo o deshacer
+    def undo():
+        if len(undo_pila) == 0:
+            MessageBox.showerror("Error", "No hay jugadas para deshacer")
+            return
+        print(undo_pila[-1])
+        redo_pila.append(undo_pila[-1][:2] + (matriz[undo_pila[-1][0]-1][undo_pila[-1][1]-1]['text'],))
+        matriz[undo_pila[-1][0]-1][undo_pila[-1][1]-1].configure(text=undo_pila[-1][2])
+        undo_pila.pop()
+    # Función redo o rehacer
+    def redo():
+        if len(redo_pila) == 0:
+            MessageBox.showerror("Error", "No hay jugadas para rehacer")
+            return
+        undo_pila.append(redo_pila[-1][:2] + (matriz[redo_pila[-1][0]-1][redo_pila[-1][1]-1]['text'],))
+        print(redo_pila[-1][2])
+        matriz[redo_pila[-1][0]-1][redo_pila[-1][1]-1].configure(text=redo_pila[-1][2])
+        redo_pila.pop()
+        
     # Primera fila de botones
     boton_iniciar = Button(jugar_ventana, height = 2, width=14, text="Iniciar \n Juego", font=("Arial", 10), bg="#FF0066")
-    boton_undo = Button(jugar_ventana, height = 2, width=14, text="Deshacer \n Jugada", font=("Arial", 10), bg="#0FD1DB")
+    boton_undo = Button(jugar_ventana, height = 2, width=14, text="Deshacer \n Jugada", command=undo, font=("Arial", 10), bg="#0FD1DB")
     boton_borrar_casilla = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Casilla", font=("Arial", 10), bg="#FFD700")
     boton_top10 = Button(jugar_ventana, height = 2, width=14, text="Top 10", font=("Arial", 10), bg="#00B050")
     
@@ -143,7 +166,7 @@ def ventana_jugar():
     boton_borrar_casilla.place(x= 400, y= 580, anchor=NW)
     boton_top10.place(x= 580, y= 580, anchor=NW)
     # Segunda fila de botones
-    boton_redo = Button(jugar_ventana, height = 2, width=14, text="Rehacer \n Jugada", font=("Arial", 10), bg="#FF0066")
+    boton_redo = Button(jugar_ventana, height = 2, width=14, text="Rehacer \n Jugada", command=redo, font=("Arial", 10), bg="#FF0066")
     boton_borrar_juego = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Juego", font=("Arial", 10), bg="#0FD1DB")
     boton_guardar = Button(jugar_ventana, height = 2, width=14, text="Guardar \n Juego", font=("Arial", 10), bg="#FFD700")
     
@@ -175,22 +198,24 @@ def ventana_jugar():
         partidas[n] = tuple(partidas[n])
     
     partidas = partidas["FACIL"]
-    partida_actual = random.choice(partidas)
-    partidas = list(partidas)
-    partidas.remove(partida_actual)
-    partidas = tuple(partidas)
-    print(partida_actual)
-    partida_actual_orden = {}
-    for i in partida_actual:
-        if partida_actual_orden.get((i[2], i[3])) == None:
-            partida_actual_orden[i[2], i[3]] = [(i[0], i[1], i[4])]
-        else:
-            partida_actual_orden[i[2], i[3]] = partida_actual_orden[i[2], i[3]] + [(i[0], i[1], i[4])]
-    partida_actual = partida_actual_orden
-    del partida_actual_orden
-    for i in partida_actual:
-        partida_actual[i].sort(key=lambda x: x[0])
-    
+    def seleccionar_partida(partidas):
+        partida_actual = random.choice(partidas)
+        partidas = list(partidas)
+        partidas.remove(partida_actual)
+        partidas = tuple(partidas)
+        print(partida_actual)
+        partida_actual_orden = {}
+        for i in partida_actual:
+            if partida_actual_orden.get((i[2], i[3])) == None:
+                partida_actual_orden[i[2], i[3]] = [(i[0], i[1], i[4])]
+            else:
+                partida_actual_orden[i[2], i[3]] = partida_actual_orden[i[2], i[3]] + [(i[0], i[1], i[4])]
+        partida_actual = partida_actual_orden
+        del partida_actual_orden
+        for i in partida_actual:
+            partida_actual[i].sort(key=lambda x: x[0])
+        return partida_actual, partidas
+    partida_actual, partidas = seleccionar_partida(partidas)
     # Rellenar el tablero con los valores de la partida
     for k in partida_actual:
         # Obtiene la suma de la fila y columna, si no existe, se deja un string vacío

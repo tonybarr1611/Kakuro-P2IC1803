@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 import sv_ttk
 import json
 import random
+import time
 
 def ventana_jugar():
     # Inicialización de la ventana
@@ -25,6 +26,8 @@ def ventana_jugar():
     player_name.place(relx = 0.3, y= 10, relwidth=0.4,  anchor=NW)
     # Se inicia la lista de current number, esta se usa para definir cual número se encuentra seleccionado actualmente
     current_number = [0]
+    # Variable que indica el estado del juego
+    game_state = False
     # Se inician las pilas
     undo_pila = []
     redo_pila = []
@@ -198,7 +201,29 @@ def ventana_jugar():
     
     boton_terminar.place(x= 400, y= 740, anchor=NW)
     boton_cargar.place(x= 580, y= 740, anchor=NW)
+    # Obtiene las configuraciones del archivo de configuración
+    with open("configs\kakuro2023configuración.dat", "r") as file:
+        configuracion = file.read()
+    configuracion = json.loads(configuracion)
+    if configuracion["RELOJ"] == 1 or configuracion["RELOJ"] == 3:
+        reloj_horas = Label(jugar_ventana, text="Horas", font=("Arial", 10), borderwidth=1)
+        reloj_horas.place(x= 20, y= 680, anchor=NW)
+        reloj_minutos = Label(jugar_ventana, text="Minutos", font=("Arial", 10), borderwidth=1)
+        reloj_minutos.place(x= 70, y= 680, anchor=NW)
+        reloj_segundos = Label(jugar_ventana, text="Segundos", font=("Arial", 10), borderwidth=1)
+        reloj_segundos.place(x= 130, y= 680, anchor=NW)
         
+        reloj_horas_valor = Entry(jugar_ventana, width=7, font=("Arial", 10), borderwidth=1, justify=CENTER)
+        reloj_horas_valor.place(x= 20, y= 700, anchor=NW)
+        reloj_minutos_valor = Entry(jugar_ventana, width=8, font=("Arial", 10), borderwidth=1, justify=CENTER)
+        reloj_minutos_valor.place(x= 70, y= 700, anchor=NW)
+        reloj_segundos_valor = Entry(jugar_ventana, width=8, font=("Arial", 10), borderwidth=1, justify=CENTER)
+        reloj_segundos_valor.place(x= 130, y= 700, anchor=NW)
+        if configuracion["RELOJ"] == 1:
+            reloj_horas_valor.configure(state=DISABLED)
+            reloj_minutos_valor.configure(state=DISABLED)
+            reloj_segundos_valor.configure(state=DISABLED)
+    
     # Obtener los tableros
     with open("configs/kakuro2023partidas.dat", "r") as file:
         partidas = file.read()
@@ -215,14 +240,19 @@ def ventana_jugar():
                 partidas[n][partidas[n].index(i)][i.index(j)] = tuple(j)
             partidas[n][partidas[n].index(i)] = tuple(i)
         partidas[n] = tuple(partidas[n])
-    
-    partidas = partidas["FACIL"]
+    niveles = ["FACIL", "MEDIO", "DIFICIL", "EXPERTO"]
+    nivel_label = Label(jugar_ventana, text="Nivel: " + niveles[configuracion["NIVEL"]-1], font=("Arial", 10), borderwidth=1, fg="white", bg="#1C1C1C")
+    nivel_label.place(x= 20, y= 740, anchor=NW)
+    partidas = partidas[niveles[configuracion["NIVEL"]-1]]
     def seleccionar_partida(partidas):
+        if len(partidas) == 0:
+            MessageBox.showinfo("Error", "NO HAY PARTIDAS PARA ESTE NIVEL")
+            jugar_ventana.destroy()
+            return [], partidas
         partida_actual = random.choice(partidas)
         partidas = list(partidas)
         partidas.remove(partida_actual)
         partidas = tuple(partidas)
-        print(partida_actual)
         partida_actual_orden = {}
         for i in partida_actual:
             if partida_actual_orden.get((i[2], i[3])) == None:
@@ -233,38 +263,65 @@ def ventana_jugar():
         del partida_actual_orden
         for i in partida_actual:
             partida_actual[i].sort(key=lambda x: x[0])
+        boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
         return partida_actual, partidas
     partida_actual, partidas = seleccionar_partida(partidas)
+    boton_borrar_juego.config(command=lambda: reiniciar_tablero(partida_actual, matriz))
+    boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
     # Rellenar el tablero con los valores de la partida
-    for k in partida_actual:
-        # Obtiene la suma de la fila y columna, si no existe, se deja un string vacío
-        if len(partida_actual[k]) == 2:
-            fila_suma = str(partida_actual[k][0][1])
-            columna_suma = str(partida_actual[k][1][1])
-        elif partida_actual[k][0][0] == 1:
-            fila_suma = str(partida_actual[k][0][1])
-            columna_suma = " "
+    def reiniciar_tablero(partida_actual, matriz):
+        if not game_state:
+            if MessageBox.askquestion("Reiniciar", "¿Está seguro que desea reiniciar el tablero?", icon='warning') == "yes":
+                game_state = False
+                rellenar_tablero(partida_actual, matriz)
+            else:
+                return
         else:
-            fila_suma = " "
-            columna_suma = str(partida_actual[k][0][1])
-        # Obtiene la posición de la casilla y crea el texto que se debe insertar en la misma  
-        i = k[0] - 1
-        j = k[1] - 1
-        texto = f"   \  {fila_suma} \n    \ \n {columna_suma}  \ "
-        matriz[j][i].configure(text=texto)
-        # Cambia el color y el estado de las casillas consideradas por dicha fila o columna
-        if fila_suma.isnumeric() == True:
-            print(fila_suma)
-            fila_suma = int(fila_suma)
-            for n in range(partida_actual[k][0][2]):
-                matriz[j+n+1][i].configure(bg="#666666", fg="white", state=NORMAL)
-        if columna_suma.isnumeric() == True:
-            print(columna_suma)
-            columna_suma = int(columna_suma)
-            for n in range(partida_actual[k][-1][2]):
-                matriz[j][i+n+1].configure(bg="#666666", fg="white", state=NORMAL)
+            MessageBox.showerror("Error", "NO SE HA INICIADO EL JUEGO")
+    def terminar_juego(matriz, game_state, partidas):
+        if not game_state:
+            print('a')
+            if MessageBox.askquestion("Terminar", "¿Está seguro que desea terminar el juego?", icon='warning') == "yes":
+                game_state = False
+                partida_actual, partidas = seleccionar_partida(partidas)
+                rellenar_tablero(partida_actual, matriz)
+            else:
+                return
+        else:
+            MessageBox.showerror("Error", "NO SE HA INICIADO EL JUEGO")
+    def rellenar_tablero(partida_actual, matriz):
+        for i in matriz:
+            for k in i:
+                matriz[matriz.index(i)][i.index(k)].configure(text="")
+        for k in partida_actual:
+            # Obtiene la suma de la fila y columna, si no existe, se deja un string vacío
+            if len(partida_actual[k]) == 2:
+                fila_suma = str(partida_actual[k][0][1])
+                columna_suma = str(partida_actual[k][1][1])
+            elif partida_actual[k][0][0] == 1:
+                fila_suma = str(partida_actual[k][0][1])
+                columna_suma = " "
+            else:
+                fila_suma = " "
+                columna_suma = str(partida_actual[k][0][1])
+            # Obtiene la posición de la casilla y crea el texto que se debe insertar en la misma  
+            i = k[0] - 1
+            j = k[1] - 1
+            texto = f"   \  {fila_suma} \n    \ \n {columna_suma}  \ "
+            matriz[j][i].configure(text=texto)
+            # Cambia el color y el estado de las casillas consideradas por dicha fila o columna
+            if fila_suma.isnumeric() == True:
+                print(fila_suma)
+                fila_suma = int(fila_suma)
+                for n in range(partida_actual[k][0][2]):
+                    matriz[j+n+1][i].configure(bg="#666666", fg="white", state=NORMAL)
+            if columna_suma.isnumeric() == True:
+                print(columna_suma)
+                columna_suma = int(columna_suma)
+                for n in range(partida_actual[k][-1][2]):
+                    matriz[j][i+n+1].configure(bg="#666666", fg="white", state=NORMAL)
         
-    
+    rellenar_tablero(partida_actual, matriz)
     
     
         

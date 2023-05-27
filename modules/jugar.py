@@ -14,6 +14,7 @@ def ventana_jugar():
     jugar_ventana.geometry("800x800")
     jugar_ventana.minsize(800, 800)
     jugar_ventana.maxsize(800, 800)
+    jugar_ventana.iconbitmap("assets/logo.ico")
     # Despliegue del logo
     logo_jugar = ImageTk.PhotoImage(Image.open("assets/title_logo.png").resize((119, 32), Image.LANCZOS))
     logo_jugar_label = Label(jugar_ventana, image=logo_jugar)

@@ -144,7 +144,7 @@ def ventana_jugar(player_name):
     # Creación de los botones de números
     numeros_botones = []
     for n in range(1, 10):
-        boton = Button(jugar_ventana, height = 3, width=7, text=f"{n}", font=("Arial", 10))
+        boton = Button(jugar_ventana, height = 3, width=7, text=f"{n}", font=("Arial", 10), state=DISABLED)
         numeros_botones = numeros_botones + [boton]
         numeros_botones[-1].config(command=select_number(n))
         boton.place(x= 650, y= 60 + n*50, anchor=NW)
@@ -266,10 +266,10 @@ def ventana_jugar(player_name):
         boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
         return partida_actual, partidas
     partida_actual, partidas = seleccionar_partida(partidas)
-    boton_borrar_juego.config(command=lambda: reiniciar_tablero(partida_actual, matriz))
+    boton_borrar_juego.config(command=lambda: reiniciar_tablero(partida_actual, matriz, game_state))
     boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
     # Función para rellenar el tablero actual
-    def reiniciar_tablero(partida_actual, matriz):
+    def reiniciar_tablero(partida_actual, matriz, game_state):
         if not game_state:
             if MessageBox.askquestion("Reiniciar", "¿Está seguro que desea reiniciar el tablero?", icon='warning') == "yes":
                 game_state = False

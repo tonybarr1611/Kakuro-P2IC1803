@@ -121,13 +121,15 @@ def ventana_jugar(player_name):
                     e_button.configure(bg="#1C1C1C", fg="white")
                 boton_borrar_casilla.configure(bg="#FFD700", fg="white")      
             elif curr_num() == 10:
-                undo_pila.append((i, j, matriz[i-1][j-1]["text"]))
-                matriz[i-1][j-1].configure(text="")
-                current_number.append(0)
+                if matriz[i-1][j-1]["text"] == "":
+                    MessageBox.showerror("Error", "ESTA CASILLA NO SE PUEDE BORRAR")
+                else:
+                    undo_pila.append((i, j, matriz[i-1][j-1]["text"]))
+                    matriz[i-1][j-1].configure(text="")
+                    current_number.append(0)
                 for e_button in numeros_botones:
                     e_button.configure(bg="#1C1C1C", fg="white")
                 boton_borrar_casilla.configure(bg="#FFD700", fg="white")
-                
         return place
     # Creación del tablero de juego
     matriz = []
@@ -176,6 +178,7 @@ def ventana_jugar(player_name):
         else:
             current_number.append(10)
             boton_borrar_casilla.configure(bg="white", fg="#1C1C1C")
+    # Función guardar juego
     def guardar_juego():
         print("guardar")
         juego_actual = {}
@@ -191,6 +194,7 @@ def ventana_jugar(player_name):
             pass
         else:
             jugar_ventana.destroy()
+    # Función cargar juego
     def cargar_juego():
         with open("configs/kakuro2023juegoactual.dat", "r") as file:
             partida_cargar = file.read()

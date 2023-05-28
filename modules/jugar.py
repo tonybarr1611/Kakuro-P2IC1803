@@ -176,7 +176,35 @@ def ventana_jugar(player_name):
         else:
             current_number.append(10)
             boton_borrar_casilla.configure(bg="white", fg="#1C1C1C")
-
+    def guardar_juego():
+        print("guardar")
+        juego_actual = {}
+        for j in matriz:
+            juego_actual[matriz.index(j)] = {}
+            for i in j:
+                juego_actual[matriz.index(j)][j.index(i)] = i.cget("text")
+        partida_guardar = {"juego_actual": juego_actual, "undo_pila": undo_pila, "redo_pila": redo_pila}
+        partida_guardar = json.dumps(partida_guardar)
+        with open("configs/kakuro2023juegoactual.dat", "w") as file:
+            file.write(partida_guardar)
+        if MessageBox.askquestion("Guardar", "¿VA A CONTINUAR JUGANDO?") == "yes":
+            pass
+        else:
+            jugar_ventana.destroy()
+    def cargar_juego():
+        with open("configs/kakuro2023juegoactual.dat", "r") as file:
+            partida_cargar = file.read()
+        partida_cargar = json.loads(partida_cargar)
+        print(partida_cargar["juego_actual"])
+        for j in matriz:
+            print(partida_cargar["juego_actual"][str(matriz.index(j))])
+            for i in j:
+                print(partida_cargar["juego_actual"][str(matriz.index(j))][str(j.index(i))])
+                i.configure(text=partida_cargar["juego_actual"][str(matriz.index(j))][str(j.index(i))])
+        undo_pila = partida_cargar["undo_pila"]
+        redo_pila = partida_cargar["redo_pila"]
+            
+        
     # Primera fila de botones
     boton_iniciar = Button(jugar_ventana, height = 2, width=14, text="Iniciar \n Juego", font=("Arial", 10), bg="#FF0066")
     boton_undo = Button(jugar_ventana, height = 2, width=14, text="Deshacer \n Jugada", command=undo, font=("Arial", 10), bg="#0FD1DB")
@@ -190,14 +218,14 @@ def ventana_jugar(player_name):
     # Segunda fila de botones
     boton_redo = Button(jugar_ventana, height = 2, width=14, text="Rehacer \n Jugada", command=redo, font=("Arial", 10), bg="#FF0066")
     boton_borrar_juego = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Juego", font=("Arial", 10), bg="#0FD1DB")
-    boton_guardar = Button(jugar_ventana, height = 2, width=14, text="Guardar \n Juego", font=("Arial", 10), bg="#FFD700")
+    boton_guardar = Button(jugar_ventana, height = 2, width=14, text="Guardar \n Juego", command=guardar_juego, font=("Arial", 10), bg="#FFD700")
     
     boton_redo.place(x= 220, y= 660, anchor=NW)
     boton_borrar_juego.place(x= 400, y= 660, anchor=NW)
     boton_guardar.place(x= 580, y= 660, anchor=NW)
     # Tercera fila de botones
     boton_terminar = Button(jugar_ventana, height = 2, width=14, text="Terminar \n Juego", font=("Arial", 10), bg="#FF0066")
-    boton_cargar = Button(jugar_ventana, height = 2, width=14, text="Cargar \n Juego", font=("Arial", 10), bg="#0FD1DB")
+    boton_cargar = Button(jugar_ventana, height = 2, width=14, text="Cargar \n Juego", command=cargar_juego, font=("Arial", 10), bg="#0FD1DB")
     
     boton_terminar.place(x= 400, y= 740, anchor=NW)
     boton_cargar.place(x= 580, y= 740, anchor=NW)
@@ -325,6 +353,6 @@ def ventana_jugar(player_name):
         
     rellenar_tablero(partida_actual, matriz)
     
-    
+
         
     return

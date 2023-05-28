@@ -23,8 +23,8 @@ def ventana_jugar(player_name):
     logo_jugar_label.image = logo_jugar
     logo_jugar_label.place(x=10, y= 10, anchor=NW)
     # Despliegue del nombre del jugador
-    player_name = Label(jugar_ventana, fg="white", text=f"Jugador: {player_name}")
-    player_name.place(relx = 0.3, y= 10, relwidth=0.4,  anchor=NW)
+    player_name_label = Label(jugar_ventana, fg="white", text=f"Jugador: {player_name}")
+    player_name_label.place(relx = 0.3, y= 10, relwidth=0.4,  anchor=NW)
     # Se inicia la lista de current number, esta se usa para definir cual número se encuentra seleccionado actualmente
     current_number = [0]
     # Variable que indica el estado del juego
@@ -105,7 +105,12 @@ def ventana_jugar(player_name):
             MessageBox.showerror("Error", f"JUGADA NO ES VÁLIDA PORQUE LA SUMA DE LA FILA ES {str(sumatoria_fila)} Y LA CLAVE NUMÉRICA ES {str(datos_fila[1])}")
             return False  
         return True
-    
+    def verificar_tablero():
+        for i in range(9):
+            for j in range(9):
+                if matriz[i][j]["state"] == "normal" and matriz[i][j]["text"] == "":
+                    return False
+        return True
     # Función que retorna el número seleccionado actualmente
     def curr_num():
         return current_number[-1]
@@ -131,6 +136,36 @@ def ventana_jugar(player_name):
                 for e_button in numeros_botones:
                     e_button.configure(bg="#1C1C1C", fg="white")
                 boton_borrar_casilla.configure(bg="#FFD700", fg="white")
+            if verificar_tablero() == True:
+                jugar_ventana.after_cancel(reloj_loop_id)
+                MessageBox.showinfo("FELICIDADES", f" ¡EXCELENTE {player_name}! TERMINÓ EL JUEGO CON ÉXITO")
+                if configuracion["RELOJ"] == 2:
+                    player_time = "99:99:99"
+                else:
+                    player_time = reloj_actual.get()
+                    if configuracion["RELOJ"] == 3:
+                        print(type(player_time))
+                        player_time = (datetime.datetime.strptime(f"{horas_temp}:{minutos_temp}:{segundos_temp}", "%H:%M:%S") - datetime.datetime.strptime(player_time, "%H:%M:%S"))
+                        player_time = str(player_time)
+
+                with open("configs/kakuro2023top10.dat", "r") as file:
+                    top10 = file.read()
+                top10 = json.loads(top10)
+                top_nivel = top10[niveles[configuracion["NIVEL"]-1]]
+                for n in top_nivel:
+                    if top_nivel[n] == "()":
+                        top_nivel[n] = (player_name, player_time)
+                        break
+                    else:
+                        if datetime.datetime.strptime(player_time, "%H:%M:%S") < datetime.datetime.strptime(top_nivel[n][1], "%H:%M:%S"):
+                            for k in range(10, int(n), -1):
+                                top_nivel[str(k)] = top_nivel[str(k-1)]
+                            top_nivel[n] = (player_name, player_time)
+                            break
+                top10[niveles[configuracion["NIVEL"]-1]] = top_nivel
+                with open("configs/kakuro2023top10.dat", "w") as file:
+                    file.write(json.dumps(top10))
+                
         return place
     # Creación del tablero de juego
     matriz = []
@@ -210,6 +245,7 @@ def ventana_jugar(player_name):
         redo_pila = partida_cargar["redo_pila"]
     # Función iniciar juego       
     def iniciar_juego():
+        global horas_temp, minutos_temp, segundos_temp
         if configuracion["RELOJ"] == 3:
             horas_temp = reloj_horas_valor.get()
             minutos_temp = reloj_minutos_valor.get()
@@ -240,7 +276,8 @@ def ventana_jugar(player_name):
             reloj_segundos_valor.destroy()
             def cronometro():
                 reloj_actual.set((datetime.datetime.strptime(reloj_actual.get(), "%H:%M:%S") + datetime.timedelta(seconds=1)).strftime("%H:%M:%S"))
-                jugar_ventana.after(1000, cronometro)
+                global reloj_loop_id
+                reloj_loop_id = jugar_ventana.after(1000, cronometro)
             def timer():
                 reloj_actual.set((datetime.datetime.strptime(reloj_actual.get(), "%H:%M:%S") - datetime.timedelta(seconds=1)).strftime("%H:%M:%S"))
                 if reloj_actual.get() == "00:00:00":
@@ -251,7 +288,9 @@ def ventana_jugar(player_name):
                     else:
                         jugar_ventana.destroy()
                     return
-                jugar_ventana.after(1000, timer)
+                global reloj_loop_id
+                reloj_loop_id = jugar_ventana.after(1000, timer)
+            global reloj_actual
             reloj_actual = StringVar()
             reloj_label = Label(jugar_ventana, textvariable=reloj_actual, font=("Arial", 20), bg="#1C1C1C", fg="white")
             reloj_label.place(x= 20, y= 700, anchor=NW)

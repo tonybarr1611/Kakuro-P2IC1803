@@ -7,7 +7,7 @@ import json
 import random
 import time
 
-def ventana_jugar():
+def ventana_jugar(player_name):
     # Inicialización de la ventana
     jugar_ventana = Toplevel()
     sv_ttk.set_theme("dark")
@@ -22,7 +22,7 @@ def ventana_jugar():
     logo_jugar_label.image = logo_jugar
     logo_jugar_label.place(x=10, y= 10, anchor=NW)
     # Despliegue del nombre del jugador
-    player_name = Label(jugar_ventana, fg="white", text="Jugador: Tony Barrantes")
+    player_name = Label(jugar_ventana, fg="white", text=f"Jugador: {player_name}")
     player_name.place(relx = 0.3, y= 10, relwidth=0.4,  anchor=NW)
     # Se inicia la lista de current number, esta se usa para definir cual número se encuentra seleccionado actualmente
     current_number = [0]

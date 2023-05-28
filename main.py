@@ -21,7 +21,21 @@ def main(ventana):
     logo_label.image = logo 
     logo_label.place(x= 160, y= 50)
     
-    boton_jugar = Button(ventana, text="Jugar", command=lambda: ventana_jugar(), bg="#FF0066", height=2, width=30)
+    # Pide el nombre del jugador
+    nombre_label = Label(ventana, text="Nombre del jugador:", font=("Arial", 8))
+    nombre_label.place(relx= 0.5, y= 100, anchor=N)
+    nombre_entry = Entry(ventana, font=("Arial", 8))
+    nombre_entry.place(relx= 0.5, y= 135, anchor=N)
+    # Verifica que se haya añadido un nombre de jugador
+    def ejecutar_juego():
+        nombre_jugador = nombre_entry.get()
+        if nombre_jugador == "":
+            MessageBox.showerror("Error", "Debe ingresar un nombre de jugador")
+            return
+        else:
+            ventana_jugar(nombre_jugador)
+    # Botones
+    boton_jugar = Button(ventana, text="Jugar", command=lambda: ejecutar_juego(), bg="#FF0066", height=2, width=30)
     boton_jugar.place(relx= 0.5, y= 200, anchor=N)
     
     boton_configurar = Button(ventana, text="Configurar", command=lambda: ventana_configurar(), bg="#0FD1DB", height=2, width=30)

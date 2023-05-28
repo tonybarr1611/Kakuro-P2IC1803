@@ -6,6 +6,7 @@ import sv_ttk
 import json
 import random
 import time
+import datetime
 
 def ventana_jugar(player_name):
     # Inicialización de la ventana
@@ -207,12 +208,76 @@ def ventana_jugar(player_name):
                 i.configure(text=partida_cargar["juego_actual"][str(matriz.index(j))][str(j.index(i))])
         undo_pila = partida_cargar["undo_pila"]
         redo_pila = partida_cargar["redo_pila"]
-            
-        
+    # Función iniciar juego       
+    def iniciar_juego():
+        if configuracion["RELOJ"] == 3:
+            horas_temp = reloj_horas_valor.get()
+            minutos_temp = reloj_minutos_valor.get()
+            segundos_temp = reloj_segundos_valor.get()
+            print(f"horas: {horas_temp}, minutos: {minutos_temp}, segundos: {segundos_temp}")
+            if horas_temp == "" and minutos_temp == "" and segundos_temp == "":
+                MessageBox.showerror("Error", "Por favor ingrese un tiempo valido")
+                return
+            if horas_temp.isnumeric() and minutos_temp.isnumeric() and segundos_temp.isnumeric():
+                if int(horas_temp) > 2 or int(minutos_temp) > 59 or int(minutos_temp) < 0 or int(segundos_temp) > 59 or int(segundos_temp) < 0:
+                    MessageBox.showerror("Error", "Por favor ingrese un tiempo valido")
+                    return
+                if int(horas_temp) == 0 and int(minutos_temp) == 0 and int(segundos_temp) == 0:
+                    MessageBox.showerror("Error", "Por favor ingrese un tiempo valido")
+                    return
+            else:
+                MessageBox.showerror("Error", "Por favor ingrese un tiempo valido")
+                return
+        if configuracion["RELOJ"] == 1 or configuracion["RELOJ"] == 3:
+            reloj_horas.destroy()
+            reloj_minutos.destroy()
+            reloj_segundos.destroy()
+            horas_temp = reloj_horas_valor.get()
+            minutos_temp = reloj_minutos_valor.get()
+            segundos_temp = reloj_segundos_valor.get()
+            reloj_horas_valor.destroy()
+            reloj_minutos_valor.destroy()
+            reloj_segundos_valor.destroy()
+            def cronometro():
+                reloj_actual.set((datetime.datetime.strptime(reloj_actual.get(), "%H:%M:%S") + datetime.timedelta(seconds=1)).strftime("%H:%M:%S"))
+                jugar_ventana.after(1000, cronometro)
+            def timer():
+                reloj_actual.set((datetime.datetime.strptime(reloj_actual.get(), "%H:%M:%S") - datetime.timedelta(seconds=1)).strftime("%H:%M:%S"))
+                if reloj_actual.get() == "00:00:00":
+                    if MessageBox.askquestion("Tiempo expirado", "¿DESEA CONTINUAR EL MISMO JUEGO?") == 'yes':
+                        reloj_actual.set(f"{horas_temp}:{minutos_temp}:{segundos_temp}")
+                        configuracion["RELOJ"] = 1
+                        cronometro()
+                    else:
+                        jugar_ventana.destroy()
+                    return
+                jugar_ventana.after(1000, timer)
+            reloj_actual = StringVar()
+            reloj_label = Label(jugar_ventana, textvariable=reloj_actual, font=("Arial", 20), bg="#1C1C1C", fg="white")
+            reloj_label.place(x= 20, y= 700, anchor=NW)
+            if configuracion["RELOJ"] == 1:
+                reloj_actual.set("00:00:00")
+                cronometro()
+            else:
+                reloj_actual.set(f"{horas_temp}:{minutos_temp}:{segundos_temp}")
+                timer()
+                
+        for e_button in numeros_botones:
+            e_button.configure(state=NORMAL)
+        boton_borrar_casilla.configure(state=NORMAL)
+        boton_iniciar.configure(state=DISABLED)
+        boton_top10.configure(state=DISABLED)
+        boton_cargar.configure(state=DISABLED)
+        boton_guardar.configure(state=NORMAL)
+        boton_undo.configure(state=NORMAL)
+        boton_redo.configure(state=NORMAL)   
+        game_state = True
+        boton_borrar_juego.config(command=lambda: reiniciar_tablero(partida_actual, matriz, game_state))
+        boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
     # Primera fila de botones
-    boton_iniciar = Button(jugar_ventana, height = 2, width=14, text="Iniciar \n Juego", font=("Arial", 10), bg="#FF0066")
+    boton_iniciar = Button(jugar_ventana, height = 2, width=14, text="Iniciar \n Juego", command=iniciar_juego, font=("Arial", 10), bg="#FF0066")
     boton_undo = Button(jugar_ventana, height = 2, width=14, text="Deshacer \n Jugada", command=undo, font=("Arial", 10), bg="#0FD1DB")
-    boton_borrar_casilla = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Casilla", command=borrar_casilla, font=("Arial", 10), bg="#FFD700")
+    boton_borrar_casilla = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Casilla", command=borrar_casilla, font=("Arial", 10), bg="#FFD700", state=DISABLED)
     boton_top10 = Button(jugar_ventana, height = 2, width=14, text="Top 10", font=("Arial", 10), bg="#00B050")
     
     boton_iniciar.place(x= 40, y= 580, anchor=NW)
@@ -237,6 +302,7 @@ def ventana_jugar(player_name):
     with open("configs\kakuro2023configuración.dat", "r") as file:
         configuracion = file.read()
     configuracion = json.loads(configuracion)
+    
     if configuracion["RELOJ"] == 1 or configuracion["RELOJ"] == 3:
         reloj_horas = Label(jugar_ventana, text="Horas", font=("Arial", 10), borderwidth=1)
         reloj_horas.place(x= 20, y= 680, anchor=NW)
@@ -302,7 +368,7 @@ def ventana_jugar(player_name):
     boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
     # Función para rellenar el tablero actual
     def reiniciar_tablero(partida_actual, matriz, game_state):
-        if not game_state:
+        if game_state:
             if MessageBox.askquestion("Reiniciar", "¿Está seguro que desea reiniciar el tablero?", icon='warning') == "yes":
                 game_state = False
                 rellenar_tablero(partida_actual, matriz)
@@ -312,10 +378,10 @@ def ventana_jugar(player_name):
             MessageBox.showerror("Error", "NO SE HA INICIADO EL JUEGO")
     # Función para terminar el juego actual
     def terminar_juego(matriz, game_state, partidas):
-        if not game_state:
-            print('a')
+        if game_state:
             if MessageBox.askquestion("Terminar", "¿Está seguro que desea terminar el juego?", icon='warning') == "yes":
                 game_state = False
+                global partida_actual
                 partida_actual, partidas = seleccionar_partida(partidas)
                 rellenar_tablero(partida_actual, matriz)
             else:

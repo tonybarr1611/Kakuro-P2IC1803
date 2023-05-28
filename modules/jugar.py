@@ -165,7 +165,7 @@ def ventana_jugar(player_name):
                 top10[niveles[configuracion["NIVEL"]-1]] = top_nivel
                 with open("configs/kakuro2023top10.dat", "w") as file:
                     file.write(json.dumps(top10))
-                
+                reiniciar_juego()
         return place
     # Creación del tablero de juego
     matriz = []
@@ -290,7 +290,7 @@ def ventana_jugar(player_name):
                     return
                 global reloj_loop_id
                 reloj_loop_id = jugar_ventana.after(1000, timer)
-            global reloj_actual
+            global reloj_actual, reloj_label
             reloj_actual = StringVar()
             reloj_label = Label(jugar_ventana, textvariable=reloj_actual, font=("Arial", 20), bg="#1C1C1C", fg="white")
             reloj_label.place(x= 20, y= 700, anchor=NW)
@@ -462,6 +462,57 @@ def ventana_jugar(player_name):
         
     rellenar_tablero(partida_actual, matriz)
     
-
+    def reiniciar_juego():
+        # Obtener los tableros
+        with open("configs/kakuro2023partidas.dat", "r") as file:
+            partidas = file.read()
+        # Cambiar los parentesis por corchetes para leerlo como json
+        for n in range(partidas.count("(")):
+            partidas = partidas.replace("(", "[")
+            partidas = partidas.replace(")", "]")
+        # Lee el archivo como json
+        partidas = json.loads(partidas)
+        # Cambia las listas por tuplas
+        for n in partidas:
+            for i in partidas[n]:
+                for j in i:
+                    partidas[n][partidas[n].index(i)][i.index(j)] = tuple(j)
+                partidas[n][partidas[n].index(i)] = tuple(i)
+            partidas[n] = tuple(partidas[n])
+        niveles = ["FACIL", "MEDIO", "DIFICIL", "EXPERTO"]
+        partidas = partidas[niveles[configuracion["NIVEL"]-1]]
+        partida_actual, partidas = seleccionar_partida(partidas)
+        rellenar_tablero(partida_actual, matriz)
+        reloj_label.destroy()
+        if configuracion["RELOJ"] == 1 or configuracion["RELOJ"] == 3:
+            reloj_horas = Label(jugar_ventana, text="Horas", font=("Arial", 10), borderwidth=1)
+            reloj_horas.place(x= 20, y= 680, anchor=NW)
+            reloj_minutos = Label(jugar_ventana, text="Minutos", font=("Arial", 10), borderwidth=1)
+            reloj_minutos.place(x= 70, y= 680, anchor=NW)
+            reloj_segundos = Label(jugar_ventana, text="Segundos", font=("Arial", 10), borderwidth=1)
+            reloj_segundos.place(x= 130, y= 680, anchor=NW)
+            
+            reloj_horas_valor = Entry(jugar_ventana, width=7, font=("Arial", 10), borderwidth=1, justify=CENTER)
+            reloj_horas_valor.place(x= 20, y= 700, anchor=NW)
+            reloj_minutos_valor = Entry(jugar_ventana, width=8, font=("Arial", 10), borderwidth=1, justify=CENTER)
+            reloj_minutos_valor.place(x= 70, y= 700, anchor=NW)
+            reloj_segundos_valor = Entry(jugar_ventana, width=8, font=("Arial", 10), borderwidth=1, justify=CENTER)
+            reloj_segundos_valor.place(x= 130, y= 700, anchor=NW)
+            if configuracion["RELOJ"] == 1:
+                reloj_horas_valor.configure(state=DISABLED)
+                reloj_minutos_valor.configure(state=DISABLED)
+                reloj_segundos_valor.configure(state=DISABLED)
+            for e_button in numeros_botones:
+                e_button.configure(state=DISABLED)
+            boton_borrar_casilla.configure(state=DISABLED)
+            boton_iniciar.configure(state=NORMAL)
+            boton_top10.configure(state=NORMAL)
+            boton_cargar.configure(state=NORMAL)
+            boton_guardar.configure(state=DISABLED)
+            boton_undo.configure(state=DISABLED)
+            boton_redo.configure(state=DISABLED)   
+            game_state = True
+            boton_borrar_juego.config(command=lambda: reiniciar_tablero(partida_actual, matriz, game_state))
+            boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
         
     return

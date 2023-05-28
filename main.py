@@ -23,9 +23,10 @@ def main(ventana):
     
     # Pide el nombre del jugador
     nombre_label = Label(ventana, text="Nombre del jugador:", font=("Arial", 8))
-    nombre_label.place(relx= 0.5, y= 100, anchor=N)
+    nombre_label.place(relx= 0.5, y= 120, anchor=N)
     nombre_entry = Entry(ventana, font=("Arial", 8))
     nombre_entry.place(relx= 0.5, y= 135, anchor=N)
+    nombre_entry.insert(0, "a")
     # Verifica que se haya añadido un nombre de jugador
     def ejecutar_juego():
         nombre_jugador = nombre_entry.get()

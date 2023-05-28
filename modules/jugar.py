@@ -7,7 +7,7 @@ import json
 import random
 import time
 import datetime
-
+# Función principal de la ventana jugar, esta se encarga de todo lo relacionado a la misma
 def ventana_jugar(player_name):
     # Inicialización de la ventana
     jugar_ventana = Toplevel()
@@ -32,7 +32,7 @@ def ventana_jugar(player_name):
     # Se inician las pilas
     undo_pila = []
     redo_pila = []
-    # Función que se encarga de seleccionar un número en los botones y lo envia a la lista de current_number
+    # Función que se encarga del despliegue de la lista top10
     def top10_despliegue():
         def cronometro():
             reloj_actual.set((datetime.datetime.strptime(reloj_actual.get(), "%H:%M:%S") + datetime.timedelta(seconds=1)).strftime("%H:%M:%S"))
@@ -69,6 +69,7 @@ def ventana_jugar(player_name):
                 cronometro()
             else:
                 timer()
+    # Función que se encarga de seleccionar un número en los botones y lo envia a la lista de current_number
     def select_number(button):
         def select():
             for e_button in numeros_botones:
@@ -78,7 +79,7 @@ def ventana_jugar(player_name):
             else:
                 current_number.append(button)
                 numeros_botones[button - 1].configure(bg="white", fg="#1C1C1C")
-            print(curr_num())
+
         return select
     # Función que valida ingresar el número en la casilla seleccionada
     def validar_numero(num, i, j):
@@ -113,7 +114,6 @@ def ventana_jugar(player_name):
         # Valida fila
         it_i = i
         datos_fila =[(0, 0), 0, 0]
-        print(f"i: {i}, j: {j}")
         while True:
             if matriz[it_i-1][j-1]["state"] == "disabled":
                 for n in partida_actual:
@@ -124,7 +124,6 @@ def ventana_jugar(player_name):
                 break
             else:
                 it_i = it_i - 1
-        print(datos_fila)
         sumatoria_fila = 0
         numeros_fila = []
         if datos_fila[1] != 0:
@@ -141,6 +140,7 @@ def ventana_jugar(player_name):
             MessageBox.showerror("Error", f"JUGADA NO ES VÁLIDA PORQUE LA SUMA DE LA FILA ES {str(sumatoria_fila)} Y LA CLAVE NUMÉRICA ES {str(datos_fila[1])}")
             return False  
         return True
+    # Función que verifica si la partida está completa
     def verificar_tablero():
         for i in range(9):
             for j in range(9):
@@ -180,7 +180,6 @@ def ventana_jugar(player_name):
                 else:
                     player_time = reloj_actual.get()
                     if configuracion["RELOJ"] == 3:
-                        print(type(player_time))
                         player_time = (datetime.datetime.strptime(f"{horas_temp}:{minutos_temp}:{segundos_temp}", "%H:%M:%S") - datetime.datetime.strptime(player_time, "%H:%M:%S"))
                         player_time = str(player_time)
 
@@ -222,25 +221,23 @@ def ventana_jugar(player_name):
         numeros_botones = numeros_botones + [boton]
         numeros_botones[-1].config(command=select_number(n))
         boton.place(x= 650, y= 60 + n*50, anchor=NW)
-    # Función undo o deshacer
+    # Función undo o deshacer, deshace la ultima jugada
     def undo():
         if len(undo_pila) == 0:
             MessageBox.showerror("Error", "No hay jugadas para deshacer")
             return
-        print(undo_pila[-1])
         redo_pila.append(undo_pila[-1][:2] + (matriz[undo_pila[-1][0]-1][undo_pila[-1][1]-1]['text'],))
         matriz[undo_pila[-1][0]-1][undo_pila[-1][1]-1].configure(text=undo_pila[-1][2])
         undo_pila.pop()
-    # Función redo o rehacer
+    # Función redo o rehacer, rehace la ultima jugada deshecha
     def redo():
         if len(redo_pila) == 0:
             MessageBox.showerror("Error", "No hay jugadas para rehacer")
             return
         undo_pila.append(redo_pila[-1][:2] + (matriz[redo_pila[-1][0]-1][redo_pila[-1][1]-1]['text'],))
-        print(redo_pila[-1][2])
         matriz[redo_pila[-1][0]-1][redo_pila[-1][1]-1].configure(text=redo_pila[-1][2])
         redo_pila.pop()
-    # Función borrar casilla
+    # Función borrar casilla, selecciona el boton borrar casilla
     def borrar_casilla():
         for e_button in numeros_botones:
             e_button.configure(bg="#1C1C1C", fg="white")
@@ -250,9 +247,8 @@ def ventana_jugar(player_name):
         else:
             current_number.append(10)
             boton_borrar_casilla.configure(bg="white", fg="#1C1C1C")
-    # Función guardar juego
+    # Función guardar juego, guarda el juego actual en un archivo .dat
     def guardar_juego():
-        print("guardar")
         juego_actual = {}
         for j in matriz:
             juego_actual[matriz.index(j)] = {}
@@ -266,27 +262,23 @@ def ventana_jugar(player_name):
             pass
         else:
             jugar_ventana.destroy()
-    # Función cargar juego
+    # Función cargar juego, carga una partida pasada desde un archivo .dat
     def cargar_juego():
         with open("configs/kakuro2023juegoactual.dat", "r") as file:
             partida_cargar = file.read()
         partida_cargar = json.loads(partida_cargar)
-        print(partida_cargar["juego_actual"])
         for j in matriz:
-            print(partida_cargar["juego_actual"][str(matriz.index(j))])
             for i in j:
-                print(partida_cargar["juego_actual"][str(matriz.index(j))][str(j.index(i))])
                 i.configure(text=partida_cargar["juego_actual"][str(matriz.index(j))][str(j.index(i))])
         undo_pila = partida_cargar["undo_pila"]
         redo_pila = partida_cargar["redo_pila"]
-    # Función iniciar juego       
+    # Función iniciar juego, inicializa el juego      
     def iniciar_juego():
         global horas_temp, minutos_temp, segundos_temp
         if configuracion["RELOJ"] == 3:
             horas_temp = reloj_horas_valor.get()
             minutos_temp = reloj_minutos_valor.get()
             segundos_temp = reloj_segundos_valor.get()
-            print(f"horas: {horas_temp}, minutos: {minutos_temp}, segundos: {segundos_temp}")
             if horas_temp == "" and minutos_temp == "" and segundos_temp == "":
                 MessageBox.showerror("Error", "Por favor ingrese un tiempo valido")
                 return
@@ -376,7 +368,7 @@ def ventana_jugar(player_name):
     with open("configs\kakuro2023configuración.dat", "r") as file:
         configuracion = file.read()
     configuracion = json.loads(configuracion)
-    
+    # Si el reloj está activado, se despliega
     if configuracion["RELOJ"] == 1 or configuracion["RELOJ"] == 3:
         reloj_horas = Label(jugar_ventana, text="Horas", font=("Arial", 10), borderwidth=1)
         reloj_horas.place(x= 20, y= 680, anchor=NW)
@@ -416,6 +408,7 @@ def ventana_jugar(player_name):
     nivel_label = Label(jugar_ventana, text="Nivel: " + niveles[configuracion["NIVEL"]-1], font=("Arial", 10), borderwidth=1, fg="white", bg="#1C1C1C")
     nivel_label.place(x= 20, y= 740, anchor=NW)
     partidas = partidas[niveles[configuracion["NIVEL"]-1]]
+    # Selección de la partida y ordenamiento de la misma, retorna la partida actual y las restantes de su categoria
     def seleccionar_partida(partidas):
         if len(partidas) == 0:
             MessageBox.showinfo("Error", "NO HAY PARTIDAS PARA ESTE NIVEL")
@@ -485,18 +478,16 @@ def ventana_jugar(player_name):
             matriz[j][i].configure(text=texto)
             # Cambia el color y el estado de las casillas consideradas por dicha fila o columna
             if fila_suma.isnumeric() == True:
-                print(fila_suma)
                 fila_suma = int(fila_suma)
                 for n in range(partida_actual[k][0][2]):
                     matriz[j+n+1][i].configure(bg="#666666", fg="white", state=NORMAL)
             if columna_suma.isnumeric() == True:
-                print(columna_suma)
                 columna_suma = int(columna_suma)
                 for n in range(partida_actual[k][-1][2]):
                     matriz[j][i+n+1].configure(bg="#666666", fg="white", state=NORMAL)
         
     rellenar_tablero(partida_actual, matriz)
-    
+    # Función que reinicia el juego
     def reiniciar_juego():
         # Obtener los tableros
         with open("configs/kakuro2023partidas.dat", "r") as file:

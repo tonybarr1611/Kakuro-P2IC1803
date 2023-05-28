@@ -5,8 +5,10 @@ from PIL import Image, ImageTk
 import sv_ttk
 from modules.jugar import ventana_jugar
 from modules.configurar import ventana_configurar
+# Función que despliega el mensaje de información de la aplicación
 def acerca_de():
     MessageBox.showinfo("Acerca de", "V1.0 Kakuro\n \nDesarrollado por:\n Anthony Barrantes Jiménez  - 2023152240 \n Creado: \n mes de mayo de 2023")
+# Función principal de la ventana principal
 def main(ventana):
     ventana.title("Kakuro - 2023152240")
     ventana.geometry("500x500")
@@ -26,7 +28,7 @@ def main(ventana):
     nombre_label.place(relx= 0.5, y= 120, anchor=N)
     nombre_entry = Entry(ventana, font=("Arial", 8))
     nombre_entry.place(relx= 0.5, y= 135, anchor=N)
-    nombre_entry.insert(0, "a")
+    
     # Verifica que se haya añadido un nombre de jugador
     def ejecutar_juego():
         nombre_jugador = nombre_entry.get()
@@ -51,7 +53,7 @@ def main(ventana):
     boton_salir = Button(ventana, text="Salir", command=lambda: exit(), bg="#ED7D31", height=2, width=30)
     boton_salir.place(relx= 0.5, y = 400, anchor=N)
     
-
+# Inicia la ventana principal
 root = Tk()
 main(root)
 sv_ttk.set_theme("dark")

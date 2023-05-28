@@ -33,6 +33,42 @@ def ventana_jugar(player_name):
     undo_pila = []
     redo_pila = []
     # Función que se encarga de seleccionar un número en los botones y lo envia a la lista de current_number
+    def top10_despliegue():
+        def cronometro():
+            reloj_actual.set((datetime.datetime.strptime(reloj_actual.get(), "%H:%M:%S") + datetime.timedelta(seconds=1)).strftime("%H:%M:%S"))
+            global reloj_loop_id
+            reloj_loop_id = jugar_ventana.after(1000, cronometro)
+        def timer():
+            reloj_actual.set((datetime.datetime.strptime(reloj_actual.get(), "%H:%M:%S") - datetime.timedelta(seconds=1)).strftime("%H:%M:%S"))
+            if reloj_actual.get() == "00:00:00":
+                if MessageBox.askquestion("Tiempo expirado", "¿DESEA CONTINUAR EL MISMO JUEGO?") == 'yes':
+                    reloj_actual.set(f"{horas_temp}:{minutos_temp}:{segundos_temp}")
+                    configuracion["RELOJ"] = 1
+                    cronometro()
+                else:
+                    jugar_ventana.destroy()
+                return
+        with open("configs/kakuro2023top10.dat", "r") as file:
+            top10 = json.load(file)
+        top10_string = ""
+        for key in top10:
+            top10_string = top10_string + f"{key}:\n"
+            for marca in top10[key]:
+                if top10[key][marca] != "()":
+                    top10_string = top10_string + f"{top10[key][marca][0]}  -  {top10[key][marca][1]}\n"
+            top10_string = top10_string + "\n"
+        reloj = False
+        try:
+            jugar_ventana.after_cancel(reloj_loop_id)
+            reloj = True
+        except:
+            pass
+        MessageBox.showinfo("Top 10", top10_string)
+        if reloj:
+            if configuracion["RELOJ"] == 1:
+                cronometro()
+            else:
+                timer()
     def select_number(button):
         def select():
             for e_button in numeros_botones:
@@ -305,7 +341,6 @@ def ventana_jugar(player_name):
             e_button.configure(state=NORMAL)
         boton_borrar_casilla.configure(state=NORMAL)
         boton_iniciar.configure(state=DISABLED)
-        boton_top10.configure(state=DISABLED)
         boton_cargar.configure(state=DISABLED)
         boton_guardar.configure(state=NORMAL)
         boton_undo.configure(state=NORMAL)
@@ -317,7 +352,7 @@ def ventana_jugar(player_name):
     boton_iniciar = Button(jugar_ventana, height = 2, width=14, text="Iniciar \n Juego", command=iniciar_juego, font=("Arial", 10), bg="#FF0066")
     boton_undo = Button(jugar_ventana, height = 2, width=14, text="Deshacer \n Jugada", command=undo, font=("Arial", 10), bg="#0FD1DB")
     boton_borrar_casilla = Button(jugar_ventana, height = 2, width=14, text="Borrar \n Casilla", command=borrar_casilla, font=("Arial", 10), bg="#FFD700", state=DISABLED)
-    boton_top10 = Button(jugar_ventana, height = 2, width=14, text="Top 10", font=("Arial", 10), bg="#00B050")
+    boton_top10 = Button(jugar_ventana, height = 2, width=14, text="Top 10", command=top10_despliegue, font=("Arial", 10), bg="#00B050")
     
     boton_iniciar.place(x= 40, y= 580, anchor=NW)
     boton_undo.place(x= 220, y= 580, anchor=NW)

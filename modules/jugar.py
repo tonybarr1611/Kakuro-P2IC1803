@@ -268,7 +268,7 @@ def ventana_jugar():
     partida_actual, partidas = seleccionar_partida(partidas)
     boton_borrar_juego.config(command=lambda: reiniciar_tablero(partida_actual, matriz))
     boton_terminar.config(command=lambda: terminar_juego(matriz, game_state, partidas))
-    # Rellenar el tablero con los valores de la partida
+    # Función para rellenar el tablero actual
     def reiniciar_tablero(partida_actual, matriz):
         if not game_state:
             if MessageBox.askquestion("Reiniciar", "¿Está seguro que desea reiniciar el tablero?", icon='warning') == "yes":
@@ -278,6 +278,7 @@ def ventana_jugar():
                 return
         else:
             MessageBox.showerror("Error", "NO SE HA INICIADO EL JUEGO")
+    # Función para terminar el juego actual
     def terminar_juego(matriz, game_state, partidas):
         if not game_state:
             print('a')
@@ -289,6 +290,7 @@ def ventana_jugar():
                 return
         else:
             MessageBox.showerror("Error", "NO SE HA INICIADO EL JUEGO")
+    # Rellenar el tablero con los valores de la partida
     def rellenar_tablero(partida_actual, matriz):
         for i in matriz:
             for k in i:

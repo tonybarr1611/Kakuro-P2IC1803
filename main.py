@@ -1,23 +1,4 @@
-from tkinter import *
-from tkinter import ttk
-from tkinter import messagebox as MessageBox
-from PIL import Image, ImageTk
-import sv_ttk
-from modules.jugar import ventana_jugar
-from modules.configurar import ventana_configurar
-# Función que despliega el mensaje de información de la aplicación
-def acerca_de():
-    MessageBox.showinfo("Acerca de", "V1.0 Kakuro\n \nDesarrollado por:\n Anthony Barrantes Jiménez  - 2023152240 \n Creado: \n mes de mayo de 2023")
-# Función principal de la ventana principal
-def main(ventana):
-    ventana.title("Kakuro - 2023152240")
-    ventana.geometry("500x500")
-    ventana.minsize(500,500)
-    ventana.maxsize(500,500)
-    
-    # Icono de la ventana
-    ventana.iconbitmap("assets/logo.ico")
-    # Despliega una imagen en la columna 1, fila 0
+olumna 1, fila 0
     logo = ImageTk.PhotoImage(Image.open("assets/title_logo.png").resize((180, 48), Image.LANCZOS))
     logo_label = Label(ventana, image=logo)
     logo_label.image = logo 
